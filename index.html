@@ -14,6 +14,7 @@
   <body class="container mt-5">
     <h2 class="text-center" style="color: #ff8c00">Processador de CSV</h2>
 
+    <h4>Forward Order</h4>
     <div class="drop-area" id="drop-area">
       <p>Arraste e solte seus arquivos CSV aqui</p>
       <p>ou</p>
@@ -26,12 +27,15 @@
       />
     </div>
 
-    <div id="loading" class="text-center text-warning" style="display: none">
-      ⏳ Processando...
+    <div id="loading" class="text-center" style="display: none; color: #ff8c00;">
+      <p>
+        ⏳ Processando...
+      </p>
     </div>
 
+    <h5><i>PRÉVIA:</i></h5>
     <table
-      class="table table-striped table-bordered mt-3"
+      class="table table-striped table-bordered mt-1"
       id="results-table"
       style="display: none"
     >

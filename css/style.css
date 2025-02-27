@@ -1,14 +1,32 @@
 body {
     background-color: #fff8f0;
   }
-  .drop-area {
+
+/* Área de transferência */
+.drop-area {
     border: 2px dashed #ff8c00;
     padding: 20px;
     text-align: center;
     color: #ff8c00;
     cursor: pointer;
     margin-bottom: 20px;
-  }
-  .drop-area.dragover {
+}
+.drop-area p:nth-child(1){
+  font-size: 1.35rem;
+}
+.drop-area p:nth-child(2){
+  font-size: 1.2rem;
+}
+.drop-area.dragover {
     background-color: #ffd9b3;
-  }
+}
+
+/* Table */
+.table-warning {
+  --bs-table-bg: #ff8c00d8;
+  --bs-table-color: rgb(252, 252, 252);
+}
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+  --bs-table-color-type: var(--bs-table-striped-color);
+  --bs-table-bg-type: white;
+}

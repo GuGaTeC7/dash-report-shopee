@@ -68,14 +68,15 @@ document.addEventListener("DOMContentLoaded", function () {
       let totalOnHold = 0;
 
       const today = new Date();
-    //   const formattedToday = `${today
-    //     .getDate()
-    //     .toString()
-    //     .padStart(2, "0")}-${(today.getMonth() + 1)
-    //     .toString()
-    //     .padStart(2, "0")}-${today.getFullYear()}`;
+      const formattedToday = `${today
+        .getDate()
+        .toString()
+        .padStart(2, "0")}-${(today.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${today.getFullYear()}`;
 
-      const formattedToday = "26-02-2025"
+      // Variável para testes de dia
+      // const formattedToday = "26-02-2025"
 
       console.log("📅 Data de hoje:", formattedToday);
 
