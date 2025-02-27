@@ -1,0 +1,14 @@
+body {
+    background-color: #fff8f0;
+  }
+  .drop-area {
+    border: 2px dashed #ff8c00;
+    padding: 20px;
+    text-align: center;
+    color: #ff8c00;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .drop-area.dragover {
+    background-color: #ffd9b3;
+  }
