@@ -1,13 +1,20 @@
+:root {
+  --laranja-shopee: #ef4c29;
+}
+
 body {
     background-color: #fff8f0;
   }
 
 /* Área de transferência */
+.titulo-site {
+  color: var(--laranja-shopee);
+}
 .drop-area {
-    border: 2px dashed #ff8c00;
+    border: 2px dashed var(--laranja-shopee);
     padding: 20px;
     text-align: center;
-    color: #ff8c00;
+    color: var(--laranja-shopee);
     cursor: pointer;
     margin-bottom: 20px;
 }
@@ -23,7 +30,7 @@ body {
 
 /* Table */
 .table-warning {
-  --bs-table-bg: #ff8c00d8;
+  --bs-table-bg: var(--laranja-shopee);
   --bs-table-color: rgb(252, 252, 252);
 }
 .table-striped>tbody>tr:nth-of-type(odd)>* {

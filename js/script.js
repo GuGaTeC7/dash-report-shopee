@@ -117,6 +117,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Obtém a data formatada do dia atual (DD-MM-YYYY)
     const formattedToday = getFormattedDate(new Date());
+    // Variável para testes
+    // const formattedToday = "26-02-2025";
 
     // Identifica se estamos na tabela de Forward Order ou Return Order
     const isForwardOrder = elements.resultsTable.id === "results-table-forward";
