@@ -56,6 +56,12 @@
     --bs-table-color-type: var(--bs-table-striped-color);
     --bs-table-bg-type: white;
   }
+  .table-bordered>:not(caption)>*>* {
+    border-width: 0.7px !important;
+  }
+  .table>:not(caption)>*>* {
+    box-shadow: none !important;
+  }
 </style>
 
 <style>
@@ -128,6 +134,7 @@
           <th>📌 Entregue</th>
           <th>📌 OnHold</th>
           <th>📌 Total Hub Received</th>
+          <th>📌 Em rota</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -159,6 +166,7 @@
           <th>📌 Total Revamp Expedido</th>
           <th>📌 Total Revamp no Piso</th>
           <th>📌 Total Return Hub Received</th>
+          <th>📌 Em rota</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -222,7 +230,7 @@
       setTimeout(() => {
         // Captura os valores da tabela Forward Order
         let forwardTable = document.getElementById("results-table-forward");
-        let forwardValues = { "Total LM Expedido": "-", "Entregue": "-", "OnHold": "-", "Total Hub Received": "0" };
+        let forwardValues = { "Total LM Expedido": "-", "Entregue": "-", "OnHold": "-", "Total Hub Received": "-", "Em rota": "-" };
 
         if (forwardTable.style.display !== "none") {
           let row = forwardTable.querySelector("tbody tr");
@@ -232,14 +240,15 @@
               "Total LM Expedido": cols[0]?.textContent || "-",
               "Entregue": cols[1]?.textContent || "-",
               "OnHold": cols[2]?.textContent || "-",
-              "Total Hub Received": cols[3]?.textContent || "0"
+              "Total Hub Received": cols[3]?.textContent || "-",
+              "Em rota": cols[4]?.textContent || "-",
             };
           }
         }
 
         // Captura os valores da tabela Return Order
         let returnTable = document.getElementById("results-table-return");
-        let returnValues = { "Total Revamp Expedido": "-", "Total Revamp Piso": "-", "Total Return Hub Received": "0" };
+        let returnValues = { "Total Revamp Expedido": "-", "Total Revamp Piso": "-", "Total Return Hub Received": "-", "Em rota": "-" };
 
         if (returnTable.style.display !== "none") {
           let row = returnTable.querySelector("tbody tr");
@@ -248,7 +257,8 @@
             returnValues = {
               "Total Revamp Expedido": cols[0]?.textContent || "-",
               "Total Revamp Piso": cols[1]?.textContent || "-",
-              "Total Return Hub Received": cols[2]?.textContent || "0"
+              "Total Return Hub Received": cols[2]?.textContent || "-",
+              "Em rota": cols[3]?.textContent || "-"
             };
           }
         }
@@ -257,15 +267,21 @@
         let backlogDiaAnterior =
           (parseInt(forwardValues["Total Hub Received"]) || 0) +
           (parseInt(returnValues["Total Return Hub Received"]) || 0);
+        
+          // Calcula pacotes Em Rota
+        let emRota =
+          (parseInt(forwardValues["Em rota"]) || 0) +
+          (parseInt(returnValues["Em rota"]) || 0);
 
         // Dados formatados para exibição
         let reportData = [
+          ["Backlog dia anterior", backlogDiaAnterior],
+          ["Em rota", emRota],
           ["Total LM Expedido", forwardValues["Total LM Expedido"]],
           ["Entregue", forwardValues["Entregue"]],
           ["OnHold", forwardValues["OnHold"]],
           ["Total Revamp Expedido", returnValues["Total Revamp Expedido"]],
           ["Total Revamp Piso", returnValues["Total Revamp Piso"]],
-          ["Backlog dia anterior", backlogDiaAnterior] // Nova linha adicionada
         ];
 
         // Adiciona as linhas na tabela
@@ -431,7 +447,8 @@
           totalCol1: 0, // Primeiro dado (varia dependendo da tabela)
           totalCol2: 0, // Segundo dado (varia dependendo da tabela)
           totalCol3: 0,
-          totalCol4: 0
+          totalCol4: 0,
+          totalCol5: 0
         };
 
         // Obtém a data formatada do dia atual (DD-MM-YYYY)
@@ -468,6 +485,10 @@
               }
             }
 
+            if (status === "Delivering") {
+              counts.totalCol5++; // Incrementa a contagem para "Delivering"
+            }
+
             // Nova lógica para Total "Hub_Received"
             let lmHubDate = normalizeDate(lmHubReceiveTime);
             if (status === "Hub_Received" && lmHubDate < formattedToday) {
@@ -489,6 +510,10 @@
             if (status === "Return_Hub_Received" && receivedTime < formattedToday) {
               counts.totalCol3++; // Incrementa a contagem para "Return_Hub_Received" antes da data atual
             }
+
+            if (status === "Return_Hub_Delivering") {
+              counts.totalCol4++; // Incrementa a contagem para "Delivering"
+            }
           }
         });
 
@@ -509,8 +534,8 @@
        * @param {Object} counts - Contagem dos dados relevantes.
        * @param {Object} elements - Referências aos elementos da interface.
        */
-      function updateTable({ totalCol1, totalCol2, totalCol3, totalCol4 }, elements) {
-        console.log({ totalCol1, totalCol2, totalCol3, totalCol4 });
+      function updateTable({ totalCol1, totalCol2, totalCol3, totalCol4, totalCol5 }, elements) {
+        console.log({ totalCol1, totalCol2, totalCol3, totalCol4, totalCol5 });
 
         let rowHTML = `
       <tr>
@@ -518,6 +543,7 @@
         <td>${totalCol2}</td>
         ${totalCol3 !== undefined ? `<td>${totalCol3}</td>` : ""}
         ${totalCol4 !== undefined ? `<td>${totalCol4}</td>` : ""}
+        ${totalCol5 !== undefined ? `<td>${totalCol5}</td>` : ""}
       </tr>
   `;
 
