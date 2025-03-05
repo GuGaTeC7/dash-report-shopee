@@ -102,8 +102,6 @@
   }
 </style>
 
-
-
 <body class="container mt-5">
   <h2 class="text-center titulo-site">Processador de Report</h2>
 
@@ -129,6 +127,7 @@
           <th>📌 Total LM Expedido</th>
           <th>📌 Entregue</th>
           <th>📌 OnHold</th>
+          <th>📌 Total Hub Received</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -159,6 +158,7 @@
         <tr>
           <th>📌 Total Revamp Expedido</th>
           <th>📌 Total Revamp no Piso</th>
+          <th>📌 Total Return Hub Received</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -222,7 +222,7 @@
       setTimeout(() => {
         // Captura os valores da tabela Forward Order
         let forwardTable = document.getElementById("results-table-forward");
-        let forwardValues = { "Total LM Expedido": "-", "Entregue": "-", "OnHold": "-" };
+        let forwardValues = { "Total LM Expedido": "-", "Entregue": "-", "OnHold": "-", "Total Hub Received": "0" };
 
         if (forwardTable.style.display !== "none") {
           let row = forwardTable.querySelector("tbody tr");
@@ -231,14 +231,15 @@
             forwardValues = {
               "Total LM Expedido": cols[0]?.textContent || "-",
               "Entregue": cols[1]?.textContent || "-",
-              "OnHold": cols[2]?.textContent || "-"
+              "OnHold": cols[2]?.textContent || "-",
+              "Total Hub Received": cols[3]?.textContent || "0"
             };
           }
         }
 
         // Captura os valores da tabela Return Order
         let returnTable = document.getElementById("results-table-return");
-        let returnValues = { "Total Revamp Expedido": "-", "Total Revamp Piso": "-" };
+        let returnValues = { "Total Revamp Expedido": "-", "Total Revamp Piso": "-", "Total Return Hub Received": "0" };
 
         if (returnTable.style.display !== "none") {
           let row = returnTable.querySelector("tbody tr");
@@ -246,10 +247,16 @@
             let cols = row.querySelectorAll("td");
             returnValues = {
               "Total Revamp Expedido": cols[0]?.textContent || "-",
-              "Total Revamp Piso": cols[1]?.textContent || "-"
+              "Total Revamp Piso": cols[1]?.textContent || "-",
+              "Total Return Hub Received": cols[2]?.textContent || "0"
             };
           }
         }
+
+        // Calcula o backlog do dia anterior
+        let backlogDiaAnterior =
+          (parseInt(forwardValues["Total Hub Received"]) || 0) +
+          (parseInt(returnValues["Total Return Hub Received"]) || 0);
 
         // Dados formatados para exibição
         let reportData = [
@@ -257,7 +264,8 @@
           ["Entregue", forwardValues["Entregue"]],
           ["OnHold", forwardValues["OnHold"]],
           ["Total Revamp Expedido", returnValues["Total Revamp Expedido"]],
-          ["Total Revamp Piso", returnValues["Total Revamp Piso"]]
+          ["Total Revamp Piso", returnValues["Total Revamp Piso"]],
+          ["Backlog dia anterior", backlogDiaAnterior] // Nova linha adicionada
         ];
 
         // Adiciona as linhas na tabela
@@ -304,9 +312,6 @@
         link.click();
       });
     });
-
-
-
   </script>
 
   <script>
@@ -425,16 +430,15 @@
         let counts = {
           totalCol1: 0, // Primeiro dado (varia dependendo da tabela)
           totalCol2: 0, // Segundo dado (varia dependendo da tabela)
+          totalCol3: 0,
+          totalCol4: 0
         };
 
         // Obtém a data formatada do dia atual (DD-MM-YYYY)
         const formattedToday = getFormattedDate(new Date());
-        // Variável para testes
-        // const formattedToday = "26-02-2025";
 
         // Identifica se estamos na tabela de Forward Order ou Return Order
-        const isForwardOrder =
-          elements.resultsTable.id === "results-table-forward";
+        const isForwardOrder = elements.resultsTable.id === "results-table-forward";
 
         // Se for Forward Order, adicionamos totalCol3
         if (isForwardOrder) {
@@ -443,9 +447,12 @@
 
         // Percorre os dados do CSV e faz a contagem correta para cada tabela
         data.forEach((row) => {
+
           let deliveringTime = normalizeDate(row["Delivering Time"]);
           let deliveredTime = normalizeDate(row["Delivered Time"]);
           let onHoldTime = normalizeDate(row["OnHold Time"]);
+          let lmHubReceiveTime = normalizeDate(row["LM Hub Receive time"]);
+          let receivedTime = normalizeDate(row["Received Time"]);
           let status = row["Status"]?.trim(); // Remove espaços extras
 
           if (isForwardOrder) {
@@ -460,6 +467,13 @@
                 counts.totalCol3++; // OnHold (OnHold Time)
               }
             }
+
+            // Nova lógica para Total "Hub_Received"
+            let lmHubDate = normalizeDate(lmHubReceiveTime);
+            if (status === "Hub_Received" && lmHubDate < formattedToday) {
+              counts.totalCol4++; // Incrementa a contagem para "Hub_Received"
+            }
+
           } else {
             // Tabela de **Return Order**
             if (deliveringTime === formattedToday) {
@@ -468,12 +482,19 @@
             if (status === "Return_Hub_Received") {
               counts.totalCol2++; // Total Revamp Piso (Delivering Time + Status)
             }
+
+            // Nova lógica para contar registros onde:
+            // - Status = "Return_Hub_Received"
+            // - Received Time < data atual
+            if (status === "Return_Hub_Received" && receivedTime < formattedToday) {
+              counts.totalCol3++; // Incrementa a contagem para "Return_Hub_Received" antes da data atual
+            }
           }
         });
 
         // Se totalCol3 não foi incrementado, removemos a chave para manter como undefined
         if (!isForwardOrder) {
-          delete counts.totalCol3;
+          delete counts.totalCol4;
         }
 
         // Atualiza a tabela após um pequeno delay para evitar travamentos
@@ -488,16 +509,17 @@
        * @param {Object} counts - Contagem dos dados relevantes.
        * @param {Object} elements - Referências aos elementos da interface.
        */
-      function updateTable({ totalCol1, totalCol2, totalCol3 }, elements) {
-        console.log({ totalCol1, totalCol2, totalCol3 });
+      function updateTable({ totalCol1, totalCol2, totalCol3, totalCol4 }, elements) {
+        console.log({ totalCol1, totalCol2, totalCol3, totalCol4 });
 
         let rowHTML = `
-            <tr>
-                <td>${totalCol1}</td>
-                <td>${totalCol2}</td>
-                ${totalCol3 !== undefined ? `<td>${totalCol3}</td>` : ""}
-            </tr>
-        `;
+      <tr>
+        <td>${totalCol1}</td>
+        <td>${totalCol2}</td>
+        ${totalCol3 !== undefined ? `<td>${totalCol3}</td>` : ""}
+        ${totalCol4 !== undefined ? `<td>${totalCol4}</td>` : ""}
+      </tr>
+  `;
 
         elements.resultsBody.innerHTML = rowHTML;
         elements.resultsTable.style.display = "table";
