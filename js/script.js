@@ -174,6 +174,8 @@ function analyzeData(data, elements) {
       counts = { totalCol1: 0 };
   }
 
+  const taskIdsCounted = new Set(); // Declara o Set fora do loop para armazenar task IDs já contados
+
   data.forEach((row) => {
     const deliveringTime = normalizeDate(row["Delivering Time"]);
     const deliveredTime = normalizeDate(row["Delivered Time"]);
@@ -183,6 +185,7 @@ function analyzeData(data, elements) {
     const status = row["Status"]?.trim();
     const dcReceiveTime = normalizeDate(row["DC Receive Time"]);
     const driverName = row["Driver name"];
+    const taskId = row["Task ID"];
 
     console.log(driverName);
 
@@ -218,8 +221,14 @@ function analyzeData(data, elements) {
         }
         break;
       case "results-table-br-assignment":
+        
         if (driverName) {
           counts.totalCol1++;
+          if (!taskIdsCounted.has(taskId)) {
+            // Verifica se o taskId não foi contado anteriormente
+            counts.totalCol2++; // Incrementa totalCol2 apenas uma vez para cada taskId único
+            taskIdsCounted.add(taskId); // Adiciona o taskId ao Set
+          }
         }
         break;
     }
@@ -310,7 +319,7 @@ function generateReport() {
     ]);
     const brAssignmentValues = getTableValues("results-table-br-assignment", [
       "Total LM Expedido",
-      "Atribuído",
+      "Total Veículo Exp.",
       "Não Atribuído",
     ]);
 
@@ -334,6 +343,10 @@ function generateReport() {
     const onholdsDevolvidos = document.getElementById("onholdsDevolvidos").value;
     const totalRotasPiso = document.getElementById("totalRotasPiso").value;
 
+    const totalLmExpedido = parseInt(brAssignmentValues["Total LM Expedido"]) || 0;
+    const totalVeiculoExpedido = parseInt(brAssignmentValues["Total Veículo Exp."]) || 0;
+    const sprMedio = totalLmExpedido / totalVeiculoExpedido
+
 
     const reportData = [
       ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
@@ -341,15 +354,16 @@ function generateReport() {
       ["Total de pacotes", totalPacotes || "-"],
       ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "-"],
       ["Em Rota", emRota || "-"],
-      ["OnHolds Devolvidos na Base", onholdsDevolvidos || "-"],
-      ["Total de Rotas no Piso", totalRotasPiso || "-"], // ALTERAR PARA BAIXO
       ["Entregue", forwardValues["Entregue"] || "-"],
+      ["OnHold", onholdsDevolvidos || "-"],
+      ["OnHold Devolvidos na Base", onholdsDevolvidos || "-"],
+      ["Total Veículo Expedido", brAssignmentValues["Total Veículo Exp."] || "-"],
+      ["SPR Médio", sprMedio || "-"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
-      ["Total Pickup", pickupValues["Total Pickup"] || "-"],
-      ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
-      ["Cancelado", pickupValues["Cancelado"] || "-"],
-      ["Atribuído", brAssignmentValues["Atribuído"] || "-"],
-      ["Não Atribuído", brAssignmentValues["Não Atribuído"] || "-"],
+      ["Total de Rotas no Piso", totalRotasPiso || "-"], // ALTERAR PARA BAIXO
+      // ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
+      // ["Cancelado", pickupValues["Cancelado"] || "-"],
+      // ["Não Atribuído", brAssignmentValues["Não Atribuído"] || "-"],
     ];
 
     reportData.forEach((rowData) => {
