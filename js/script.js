@@ -308,13 +308,16 @@ function generateReport() {
     const returnHubReceived =
       parseInt(returnValues["Return Hub Received"]) || 0; // Converte para número
 
-    console.log(hubReceived, returnHubReceived);
+    const recebidosFm = parseInt(pickupValues["Recebidos FM"]) || 0; // Converte para número
 
     const backlogDiaAnterior = hubReceived + returnHubReceived; // Soma dos valores
+
+    const totalPacotes = backlogDiaAnterior + recebidosFm;
 
     const reportData = [
       ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
       ["Recebidos FM", pickupValues["Recebidos FM"] || "-"],
+      ["Total de pacotes", totalPacotes || "-"],
       ["Entregue", forwardValues["Entregue"] || "-"],
       ["OnHold", forwardValues["OnHold"] || "-"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
