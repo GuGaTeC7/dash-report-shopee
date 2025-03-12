@@ -159,10 +159,10 @@ function analyzeData(data, elements) {
 
   switch (elements.resultsTable.id) {
     case "results-table-forward":
-      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
+      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0, totalCol4: 0 };
       break;
     case "results-table-return":
-      counts = { totalCol1: 0, totalCol2: 0 };
+      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
       break;
     case "results-table-pickup":
       counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
@@ -189,14 +189,14 @@ function analyzeData(data, elements) {
     switch (elements.resultsTable.id) {
       case "results-table-forward":
         if (deliveringTime === formattedToday) {
-          counts.totalCol1++;
-          if (deliveredTime === formattedToday) counts.totalCol2++;
+          counts.totalCol1++; 
+        if (deliveredTime === formattedToday) counts.totalCol2++;
         }
-        if (
-          status === "Hub_Received" &&
-          invertDateFormat(lmHubReceiveTime) < formattedToday
-        ) {
+        if (status === "Hub_Received" && invertDateFormat(lmHubReceiveTime) < formattedToday) {
           counts.totalCol3++;
+        }
+        if (status === "Delivering") {
+          counts.totalCol4++;
         }
         break;
       case "results-table-return":
@@ -205,6 +205,11 @@ function analyzeData(data, elements) {
           if (invertDateFormat(receivedTime) < formattedToday) {
             counts.totalCol2++;
           }
+        }
+        if (status === "Return_Hub_Returning") {
+          console.log(status);
+
+          counts.totalCol3++;
         }
         break;
       case "results-table-pickup":
@@ -235,10 +240,12 @@ function updateTable(counts, elements) {
       rowHTML += `<td>${counts.totalCol1}</td>`;
       rowHTML += `<td>${counts.totalCol2}</td>`;
       rowHTML += `<td>${counts.totalCol3}</td>`;
+      rowHTML += `<td>${counts.totalCol4}</td>`;
       break;
     case "results-table-return":
       rowHTML += `<td>${counts.totalCol1}</td>`;
       rowHTML += `<td>${counts.totalCol2}</td>`;
+      rowHTML += `<td>${counts.totalCol3}</td>`;
       break;
     case "results-table-pickup":
       rowHTML += `<td>${counts.totalCol1}</td>`;
@@ -289,10 +296,12 @@ function generateReport() {
       "Entregue",
       "OnHold",
       "Hub Received",
+      "Delivering",
     ]);
     const returnValues = getTableValues("results-table-return", [
       "Total Revamp Piso",
       "Return Hub Received",
+      "Return Hub Returning",
     ]);
     const pickupValues = getTableValues("results-table-pickup", [
       "Recebidos FM",
@@ -315,11 +324,20 @@ function generateReport() {
 
     const totalPacotes = backlogDiaAnterior + recebidosFm;
 
+    const delivering = parseInt(forwardValues["Delivering"]) || 0; // Converte para número
+    const returnHubReturning = parseInt(returnValues["Return Hub Returning"]) || 0; // Converte para número
+
+    console.log(`${delivering} + ${returnHubReturning}`);
+
+    const emRota = delivering + returnHubReturning;
+
+
     const reportData = [
       ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
       ["Recebidos FM", pickupValues["Recebidos FM"] || "-"],
       ["Total de pacotes", totalPacotes || "-"],
       ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "-"],
+      ["Em Rota", emRota || "-"],
       ["Entregue", forwardValues["Entregue"] || "-"],
       ["OnHold", forwardValues["OnHold"] || "-"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
