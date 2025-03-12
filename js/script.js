@@ -182,6 +182,9 @@ function analyzeData(data, elements) {
     const receivedTime = normalizeDate(row["Received Time"]);
     const status = row["Status"]?.trim();
     const dcReceiveTime = normalizeDate(row["DC Receive Time"]);
+    const driverName = row["Driver name"];
+
+    console.log(driverName);
 
     switch (elements.resultsTable.id) {
       case "results-table-forward":
@@ -210,10 +213,8 @@ function analyzeData(data, elements) {
         }
         break;
       case "results-table-br-assignment":
-        if (deliveringTime === formattedToday) {
+        if (driverName) {
           counts.totalCol1++;
-          if (status === "Return_Hub_Received") counts.totalCol2++;
-          // Adicione mais condições conforme necessário
         }
         break;
     }
@@ -299,7 +300,7 @@ function generateReport() {
       "Cancelado",
     ]);
     const brAssignmentValues = getTableValues("results-table-br-assignment", [
-      "Total BRs",
+      "Total LM Expedido",
       "Atribuído",
       "Não Atribuído",
     ]);
@@ -318,13 +319,13 @@ function generateReport() {
       ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
       ["Recebidos FM", pickupValues["Recebidos FM"] || "-"],
       ["Total de pacotes", totalPacotes || "-"],
+      ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "-"],
       ["Entregue", forwardValues["Entregue"] || "-"],
       ["OnHold", forwardValues["OnHold"] || "-"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
       ["Total Pickup", pickupValues["Total Pickup"] || "-"],
       ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
       ["Cancelado", pickupValues["Cancelado"] || "-"],
-      ["Total BRs", brAssignmentValues["Total BRs"] || "-"],
       ["Atribuído", brAssignmentValues["Atribuído"] || "-"],
       ["Não Atribuído", brAssignmentValues["Não Atribuído"] || "-"],
     ];
