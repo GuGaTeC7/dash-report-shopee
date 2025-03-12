@@ -331,6 +331,9 @@ function generateReport() {
 
     const emRota = delivering + returnHubReturning;
 
+    const onholdsDevolvidos = document.getElementById("onholdsDevolvidos").value;
+    const totalRotasPiso = document.getElementById("totalRotasPiso").value;
+
 
     const reportData = [
       ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
@@ -338,8 +341,9 @@ function generateReport() {
       ["Total de pacotes", totalPacotes || "-"],
       ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "-"],
       ["Em Rota", emRota || "-"],
+      ["OnHolds Devolvidos na Base", onholdsDevolvidos || "-"],
+      ["Total de Rotas no Piso", totalRotasPiso || "-"], // ALTERAR PARA BAIXO
       ["Entregue", forwardValues["Entregue"] || "-"],
-      ["OnHold", forwardValues["OnHold"] || "-"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
       ["Total Pickup", pickupValues["Total Pickup"] || "-"],
       ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
