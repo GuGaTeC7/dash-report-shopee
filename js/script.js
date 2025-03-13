@@ -149,8 +149,8 @@ function convertDateFormat(dateString) {
 function analyzeData(data, elements) {
   let counts = {};
 
-  // const formattedToday = getFormattedDate(new Date());
-  const formattedToday = "2025-03-07";
+  const formattedToday = getFormattedDate(new Date());
+  // const formattedToday = "2025-03-07"; // Data para testes
   const isForwardOrder = elements.resultsTable.id === "results-table-forward";
   const isReturnOrder = elements.resultsTable.id === "results-table-return";
   const isPickupOrder = elements.resultsTable.id === "results-table-pickup";
@@ -159,16 +159,22 @@ function analyzeData(data, elements) {
 
   switch (elements.resultsTable.id) {
     case "results-table-forward":
-      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0, totalCol4: 0 };
+      counts = {
+        totalCol1: 0,
+        totalCol2: 0,
+        totalCol3: 0,
+        totalCol4: 0,
+        totalCol5: 0,
+      };
       break;
     case "results-table-return":
       counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0, totalCol4: 0 };
       break;
     case "results-table-pickup":
-      counts = { totalCol1: 0, totalCol2: 0};
+      counts = { totalCol1: 0, totalCol2: 0 };
       break;
     case "results-table-br-assignment":
-      counts = { totalCol1: 0, totalCol2: 0};
+      counts = { totalCol1: 0, totalCol2: 0 };
       break;
     default:
       counts = { totalCol1: 0 };
@@ -190,16 +196,16 @@ function analyzeData(data, elements) {
     switch (elements.resultsTable.id) {
       case "results-table-forward":
         if (convertDateFormat(deliveringTime) === formattedToday) {
-          console.log(convertDateFormat(deliveringTime));
-          counts.totalCol1++; 
-        // if (deliveredTime === formattedToday) counts.totalCol2++;
+          counts.totalCol1++;
           if (convertDateFormat(onHoldTime) === formattedToday) {
-            console.log(convertDateFormat(onHoldTime));
             counts.totalCol2++;
           }
         }
-        if (status === "Hub_Received" && invertDateFormat(lmHubReceiveTime) < formattedToday) {
-          counts.totalCol3++;
+        if (status === "Hub_Received") {
+          counts.totalCol5++;
+          if (invertDateFormat(lmHubReceiveTime) < formattedToday) {
+            counts.totalCol3++;
+          }
         }
         if (status === "Delivering") {
           counts.totalCol4++;
@@ -227,7 +233,6 @@ function analyzeData(data, elements) {
         }
         break;
       case "results-table-br-assignment":
-        
         if (driverName) {
           counts.totalCol1++;
           if (!taskIdsCounted.has(taskId)) {
@@ -256,6 +261,7 @@ function updateTable(counts, elements) {
       rowHTML += `<td>${counts.totalCol2}</td>`;
       rowHTML += `<td>${counts.totalCol3}</td>`;
       rowHTML += `<td>${counts.totalCol4}</td>`;
+      rowHTML += `<td>${counts.totalCol5}</td>`;
       break;
     case "results-table-return":
       rowHTML += `<td>${counts.totalCol1}</td>`;
@@ -311,6 +317,7 @@ function generateReport() {
       "OnHold",
       "Hub Received",
       "Delivering",
+      "Total Receivid",
     ]);
     const returnValues = getTableValues("results-table-return", [
       "Total Revamp Piso",
@@ -335,46 +342,55 @@ function generateReport() {
 
     const recebidosFm = parseInt(pickupValues["Recebidos FM"]) || 0;
 
-    const backlogDiaAnterior = hubReceived + returnHubReceived; 
+    const backlogDiaAnterior = hubReceived + returnHubReceived;
 
     const totalPacotes = backlogDiaAnterior + recebidosFm;
 
     const delivering = parseInt(forwardValues["Delivering"]) || 0;
-    const returnHubReturning = parseInt(returnValues["Return Hub Returning"]) || 0;
+    const returnHubReturning =
+      parseInt(returnValues["Return Hub Returning"]) || 0;
 
     const emRota = delivering + returnHubReturning;
 
-    const onholdsDevolvidos = document.getElementById("onholdsDevolvidos").value;
+    const onholdsDevolvidos =
+      document.getElementById("onholdsDevolvidos").value;
     const totalRotasPiso = document.getElementById("totalRotasPiso").value;
 
-    const totalLmExpedido = parseInt(brAssignmentValues["Total LM Expedido"]) || 0;
-    const totalVeiculoExpedido = parseInt(brAssignmentValues["Total Veículo Exp."]) || 0;
+    const totalLmExpedido =
+      parseInt(brAssignmentValues["Total LM Expedido"]) || 0;
+    const totalVeiculoExpedido =
+      parseInt(brAssignmentValues["Total Veículo Exp."]) || 0;
 
     const sprMedio = totalLmExpedido / totalVeiculoExpedido;
 
-    const onHoldForward = forwardValues["OnHold"];     
-    const onHoldReturn = returnValues["OnHold"];     
-    // const onHoldForward = parseInt(forwardValues["OnHold"]) || 20;     
-    // const onHoldReturn = parseInt(returnValues["OnHold"]) || 20;     
+    const onHoldForward = parseInt(forwardValues["OnHold"]) || 0;
+    const onHoldReturn = parseInt(returnValues["OnHold"]) || 0;
 
-    console.log(`${onHoldForward} + ${onHoldReturn}`);
     const onHoldTotal = parseInt(onHoldForward + onHoldReturn);
-    console.log(`Result: ${onHoldTotal}`);
 
+    const totalReceived = parseInt(forwardValues["Total Receivid"]) || 0;
+    const totalRevampPiso = parseInt(returnValues["Total Revamp Piso"]) || 0;
+
+    const totalPacotesPiso = totalReceived + totalRevampPiso;
 
     const reportData = [
       ["Backlog do Dia Anterior", backlogDiaAnterior || "0"],
-      ["Recebidos FM", pickupValues["Recebidos FM"] || "0"],
-      ["Total de pacotes", totalPacotes || "0"],
+      ["Recebidos FM (HOJE)", pickupValues["Recebidos FM"] || "0"],
+      ["Total de Pacotes", totalPacotes || "0"],
       ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "0"],
       ["Em Rota", emRota || "0"],
       ["Entregue", forwardValues["Entregue"] || "0"],
       ["OnHold", onHoldTotal || "0"],
       ["OnHold Devolvidos na Base", onholdsDevolvidos || "0"],
-      ["Total Veículo Expedido", brAssignmentValues["Total Veículo Exp."] || "0"],
+      [
+        "Total Veículos Expedidos",
+        brAssignmentValues["Total Veículo Exp."] || "0",
+      ],
       ["SPR Médio", sprMedio || "0"],
+      ["Total de Rotas no Piso", totalRotasPiso || "0"],
+      ["Total Receivid", forwardValues["Total Receivid"] || "0"],
       ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "0"],
-      ["Total de Rotas no Piso", totalRotasPiso || "0"], // ALTERAR PARA BAIXO
+      ["Total de Pacotes no Piso", totalPacotesPiso || "0"],
       // ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
       // ["Cancelado", pickupValues["Cancelado"] || "-"],
       // ["Não Atribuído", brAssignmentValues["Não Atribuído"] || "-"],
