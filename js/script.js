@@ -162,13 +162,13 @@ function analyzeData(data, elements) {
       counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0, totalCol4: 0 };
       break;
     case "results-table-return":
-      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
+      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0, totalCol4: 0 };
       break;
     case "results-table-pickup":
-      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
+      counts = { totalCol1: 0, totalCol2: 0};
       break;
     case "results-table-br-assignment":
-      counts = { totalCol1: 0, totalCol2: 0, totalCol3: 0 };
+      counts = { totalCol1: 0, totalCol2: 0};
       break;
     default:
       counts = { totalCol1: 0 };
@@ -187,13 +187,16 @@ function analyzeData(data, elements) {
     const driverName = row["Driver name"];
     const taskId = row["Task ID"];
 
-    console.log(driverName);
-
     switch (elements.resultsTable.id) {
       case "results-table-forward":
-        if (deliveringTime === formattedToday) {
+        if (convertDateFormat(deliveringTime) === formattedToday) {
+          console.log(convertDateFormat(deliveringTime));
           counts.totalCol1++; 
-        if (deliveredTime === formattedToday) counts.totalCol2++;
+        // if (deliveredTime === formattedToday) counts.totalCol2++;
+          if (convertDateFormat(onHoldTime) === formattedToday) {
+            console.log(convertDateFormat(onHoldTime));
+            counts.totalCol2++;
+          }
         }
         if (status === "Hub_Received" && invertDateFormat(lmHubReceiveTime) < formattedToday) {
           counts.totalCol3++;
@@ -210,9 +213,12 @@ function analyzeData(data, elements) {
           }
         }
         if (status === "Return_Hub_Returning") {
-          console.log(status);
-
           counts.totalCol3++;
+        }
+        if (convertDateFormat(deliveringTime) === formattedToday) {
+          if (convertDateFormat(onHoldTime) === formattedToday) {
+            counts.totalCol4++;
+          }
         }
         break;
       case "results-table-pickup":
@@ -255,16 +261,15 @@ function updateTable(counts, elements) {
       rowHTML += `<td>${counts.totalCol1}</td>`;
       rowHTML += `<td>${counts.totalCol2}</td>`;
       rowHTML += `<td>${counts.totalCol3}</td>`;
+      rowHTML += `<td>${counts.totalCol4}</td>`;
       break;
     case "results-table-pickup":
       rowHTML += `<td>${counts.totalCol1}</td>`;
       rowHTML += `<td>${counts.totalCol2}</td>`;
-      rowHTML += `<td>${counts.totalCol3}</td>`;
       break;
     case "results-table-br-assignment":
       rowHTML += `<td>${counts.totalCol1}</td>`;
       rowHTML += `<td>${counts.totalCol2}</td>`;
-      rowHTML += `<td>${counts.totalCol3}</td>`;
       break;
   }
 
@@ -311,6 +316,7 @@ function generateReport() {
       "Total Revamp Piso",
       "Return Hub Received",
       "Return Hub Returning",
+      "OnHold",
     ]);
     const pickupValues = getTableValues("results-table-pickup", [
       "Recebidos FM",
@@ -323,20 +329,18 @@ function generateReport() {
       "Não Atribuído",
     ]);
 
-    const hubReceived = parseInt(forwardValues["Hub Received"]) || 0; // Converte para número
+    const hubReceived = parseInt(forwardValues["Hub Received"]) || 0;
     const returnHubReceived =
-      parseInt(returnValues["Return Hub Received"]) || 0; // Converte para número
+      parseInt(returnValues["Return Hub Received"]) || 0;
 
-    const recebidosFm = parseInt(pickupValues["Recebidos FM"]) || 0; // Converte para número
+    const recebidosFm = parseInt(pickupValues["Recebidos FM"]) || 0;
 
-    const backlogDiaAnterior = hubReceived + returnHubReceived; // Soma dos valores
+    const backlogDiaAnterior = hubReceived + returnHubReceived; 
 
     const totalPacotes = backlogDiaAnterior + recebidosFm;
 
-    const delivering = parseInt(forwardValues["Delivering"]) || 0; // Converte para número
-    const returnHubReturning = parseInt(returnValues["Return Hub Returning"]) || 0; // Converte para número
-
-    console.log(`${delivering} + ${returnHubReturning}`);
+    const delivering = parseInt(forwardValues["Delivering"]) || 0;
+    const returnHubReturning = parseInt(returnValues["Return Hub Returning"]) || 0;
 
     const emRota = delivering + returnHubReturning;
 
@@ -345,22 +349,32 @@ function generateReport() {
 
     const totalLmExpedido = parseInt(brAssignmentValues["Total LM Expedido"]) || 0;
     const totalVeiculoExpedido = parseInt(brAssignmentValues["Total Veículo Exp."]) || 0;
-    const sprMedio = totalLmExpedido / totalVeiculoExpedido
+
+    const sprMedio = totalLmExpedido / totalVeiculoExpedido;
+
+    const onHoldForward = forwardValues["OnHold"];     
+    const onHoldReturn = returnValues["OnHold"];     
+    // const onHoldForward = parseInt(forwardValues["OnHold"]) || 20;     
+    // const onHoldReturn = parseInt(returnValues["OnHold"]) || 20;     
+
+    console.log(`${onHoldForward} + ${onHoldReturn}`);
+    const onHoldTotal = parseInt(onHoldForward + onHoldReturn);
+    console.log(`Result: ${onHoldTotal}`);
 
 
     const reportData = [
-      ["Backlog do Dia Anterior", backlogDiaAnterior || "-"],
-      ["Recebidos FM", pickupValues["Recebidos FM"] || "-"],
-      ["Total de pacotes", totalPacotes || "-"],
-      ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "-"],
-      ["Em Rota", emRota || "-"],
-      ["Entregue", forwardValues["Entregue"] || "-"],
-      ["OnHold", onholdsDevolvidos || "-"],
-      ["OnHold Devolvidos na Base", onholdsDevolvidos || "-"],
-      ["Total Veículo Expedido", brAssignmentValues["Total Veículo Exp."] || "-"],
-      ["SPR Médio", sprMedio || "-"],
-      ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "-"],
-      ["Total de Rotas no Piso", totalRotasPiso || "-"], // ALTERAR PARA BAIXO
+      ["Backlog do Dia Anterior", backlogDiaAnterior || "0"],
+      ["Recebidos FM", pickupValues["Recebidos FM"] || "0"],
+      ["Total de pacotes", totalPacotes || "0"],
+      ["Total LM Expedido", brAssignmentValues["Total LM Expedido"] || "0"],
+      ["Em Rota", emRota || "0"],
+      ["Entregue", forwardValues["Entregue"] || "0"],
+      ["OnHold", onHoldTotal || "0"],
+      ["OnHold Devolvidos na Base", onholdsDevolvidos || "0"],
+      ["Total Veículo Expedido", brAssignmentValues["Total Veículo Exp."] || "0"],
+      ["SPR Médio", sprMedio || "0"],
+      ["Total Revamp Piso", returnValues["Total Revamp Piso"] || "0"],
+      ["Total de Rotas no Piso", totalRotasPiso || "0"], // ALTERAR PARA BAIXO
       // ["Entregue (Pickup)", pickupValues["Entregue"] || "-"],
       // ["Cancelado", pickupValues["Cancelado"] || "-"],
       // ["Não Atribuído", brAssignmentValues["Não Atribuído"] || "-"],
